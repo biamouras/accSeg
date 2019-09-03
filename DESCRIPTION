@@ -1,0 +1,18 @@
+Package: accSeg
+Title: Functions for my MSc analysis
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Beatriz",
+           family = "Moura dos Santos",
+           role = c("aut", "cre"),
+           email = "beatriz.moura@usp.br",
+           comment = c(ORCID = "0000-0003-0834-0790"))
+Description: This package contains functions to process accessibilities, urban segregation and Moran's I
+Depends: R (>= 3.6.0)
+Imports: dplyr, 
+         tidyr, 
+         purrr, 
+         utils
+License: MIT | file LICENSE
+Encoding: UTF-8
+LazyData: true
