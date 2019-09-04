@@ -32,7 +32,7 @@ LISAmaps <- function(shp, x=NULL, y=NULL, W=NULL, local_sims=NULL, local_moran=N
   
   # classifying the local p-values
   df_pvalue <- purrr::map_df(1:nrow, function(i) {
-    p <- ecdf(local_sims[i,])
+    p <- stats::ecdf(local_sims[i,])
     localPseudo <- p(local_moran[i])
     
     pvalue <- as.character(factor(cut(

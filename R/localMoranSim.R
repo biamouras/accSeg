@@ -40,6 +40,10 @@ localMoranSim <- function(shp, x=NULL, y = NULL, W=NULL, nsims = 999){
   y_s <- replicate(nsims, sample(y, size = n)) 
   y_s <- scale.default(y_s)
   
+  # standardizing the matrix, which line sum equals to 1
+  Wn <- W/rowSums(W)
+  Wn[which(is.na(Wn))] <- 0
+  
   # processing the simulations
   local_sims  <- apply(y_s, 2, function(s) s*Wn%*%s)
   
