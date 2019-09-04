@@ -12,6 +12,7 @@ LISAmaps <- function(shp, x=NULL, y=NULL, W=NULL, local_sims=NULL, local_moran=N
   # if class of shp is sf
   if(class(shp)[1] == "sf") {
     shp_sf <- shp
+    message('Converting sf to shp')
     shp <- sf::as_Spatial(shp)
   } else{
     shp_sf <- sf::st_as_sf(shp)
@@ -19,11 +20,13 @@ LISAmaps <- function(shp, x=NULL, y=NULL, W=NULL, local_sims=NULL, local_moran=N
   # x
   nm <- names(shp_sf)
   x_aux <- shp_sf[[nm[2]]]
-  
+  message(nrow(x_aux))
+  message('Processing local simulations')
   # if local_sims is NULL calls localMoranSim
   if(is.null(local_sims)){
     local_sims <- localMoranSim(shp, x, y, W)
   }
+  message('Processing local Moran')
   # if local_moran is NULL calls localMoran
   if(is.null(local_moran)){
     local_moran <- localMoran(shp, x, y, W)

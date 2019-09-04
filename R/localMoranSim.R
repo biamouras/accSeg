@@ -22,6 +22,7 @@ localMoranSim <- function(shp, x=NULL, y = NULL, W=NULL, nsims = 999){
     } else{
       shp_sf <- sf::st_as_sf(shp)
     }
+    message('Processing W matrix')
     # process the W
     W <- nbMatrix(shp)
     # x
@@ -35,7 +36,7 @@ localMoranSim <- function(shp, x=NULL, y = NULL, W=NULL, nsims = 999){
   }
   
   # treating the main and auxiliary variables
-  n   <- nrow(y)
+  n <- length(y)
   local_sims  <- matrix(NA, nrow = n, ncol=nsims)
   y_s <- replicate(nsims, sample(y, size = n)) 
   y_s <- scale.default(y_s)
