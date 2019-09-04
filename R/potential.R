@@ -9,9 +9,9 @@
 potential <- function(betas, oportunities, matrix){
   matrix %>% 
     dplyr::left_join(oportunities, by = c('destination' = 'id')) %>% 
-    dplyr::mutate(decay = exp(travel_time*betas),
-                  job = job*decay) %>% 
-    dplyr::group_by(origin) %>% 
-    dplyr::summarise(acc = sum(job, na.rm=T)) %>% 
+    dplyr::mutate(decay = exp(.data$travel_time*betas),
+                  job = .data$job*.data$decay) %>% 
+    dplyr::group_by(.data$origin) %>% 
+    dplyr::summarise(acc = sum(.data$job, na.rm=T)) %>% 
     dplyr::ungroup()
 }

@@ -7,10 +7,10 @@
 
 cumop <- function(cutoff, oportunities, matrix){
   matrix %>% 
-    dplyr::filter(travel_time<=cutoff & travel_time >=0) %>% 
+    dplyr::filter(.data$travel_time<=cutoff & .data$travel_time >=0) %>% 
     dplyr::left_join(oportunities, by=c('destination' = 'id')) %>% 
-    dplyr::group_by(origin) %>% 
-    dplyr::summarise(acc = sum(job, na.rm=T)) %>% 
+    dplyr::group_by(.data$origin) %>% 
+    dplyr::summarise(acc = sum(.data$job, na.rm=T)) %>% 
     dplyr::ungroup() %>% 
     dplyr::mutate(threshold = paste0(cutoff,'min'))
 }
