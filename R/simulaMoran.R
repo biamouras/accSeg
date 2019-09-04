@@ -1,22 +1,29 @@
 #' Evaluates the p-value of the Moran's I
 #' 
-#' @param x numeric vector with values of variable 1
-#' @param y numeric vector with values of variable 2. Defaults to NULL (not bivariate)
-#' @param W numeric matrix of neighbourhood matrix (must be binary matrix)
 #' @param nsims numeric value of number of simulations. Defaults to 999.
+#' @inheritParams globalMoran
 #' 
-#' @output list with global_sim (global Moran's I simulations) and 
+#' @return list with global_sim (global Moran's I simulations) and 
 #'         local_sim (local Moran's I simulations)and lagged (neighbours' mean) 
 #'         
-simulaMoran <- function(x, y = NULL, W, nsims = 999){
+simulaMoran <- function(x, y = NULL, W=NULL, shp=NULL, nsims = 999){
   
-  if(is.null(y)) y <- x
+  # if y is NULL the process is not bivariate
+  if(is.null(y)) y = x
+  
+  # if W is NULL calls the nbMatrix
+  if(is.null(W)){
+    if(is.null(shp)){
+      stop('W and shp are NULL. Please add any of these parameters.')
+    } else{
+      W <- nbMatrix(shp)
+    }
+  }
   
   # treating the main and auxiliary variables
   n   <- nrow(W)
   IDs <- 1:n
   xp <- as.vector(scale.default(x))
-  W[which(is.na(W))] <- 0
   Wn <- W/rowSums(W)
   global_sims <- NULL
   local_sims  <- matrix(NA, nrow = n, ncol=nsims)
