@@ -4,7 +4,7 @@
 #'
 #' @return the local values of Moran's I
 
-localMoran <- function(shp, x=NULL, y = NULL, W=NULL){
+localMoran <- function(shp=NULL, x=NULL, y = NULL, W=NULL){
   
   # if shp is NULL then it must have x and W
   if(is.null(shp)){

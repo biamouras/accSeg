@@ -4,7 +4,7 @@
 #' 
 #' @return local_sim (local Moran's I simulations)
 #'         
-localMoranSim <- function(shp, x=NULL, y = NULL, W=NULL, nsims = 999){
+localMoranSim <- function(shp=NULL, x=NULL, y = NULL, W=NULL, nsims = 999){
   
   # if shp is NULL then it must have x and W
   if(is.null(shp)){
@@ -35,18 +35,32 @@ localMoranSim <- function(shp, x=NULL, y = NULL, W=NULL, nsims = 999){
     } else {stop('shp is bigger or shorter than expected')}
   }
   
+  
   # treating the main and auxiliary variables
   n <- length(y)
-  local_sims  <- matrix(NA, nrow = n, ncol=nsims)
-  y_s <- replicate(nsims, sample(y, size = n)) 
-  y_s <- scale.default(y_s)
   
   # standardizing the matrix, which line sum equals to 1
-  Wn <- W/rowSums(W)
+  Wn <- W %>% 
+    dplyr::rowwise() %>% 
+    dplyr::mutate(sum = sum(W))
+  
+  d <- scale(W, center=F, scale=rowSums(W))
+  
   Wn[which(is.na(Wn))] <- 0
   
+  # processing
+  local_sims  <- matrix(NA, nrow = n, ncol=nsims)
+  local_sims <- replicate(nsims, {
+    y_s <- sample(y, size = n)
+    y_s <- scale.default(y_s)
+    apply(y_s, 2, function(s) s*Wn%*%s)
+    })
+  
+  
+
+  
   # processing the simulations
-  local_sims  <- apply(y_s, 2, function(s) s*Wn%*%s)
+  #local_sims  <- apply(y_s, 2, function(s) s*Wn%*%s)
   
   return(local_sims)
 }

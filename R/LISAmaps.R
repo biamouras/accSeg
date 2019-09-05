@@ -7,29 +7,41 @@
 #' 
 #' @return sf with localPseudo (p-value of local), pvalue (p-value classified), patterns (cluster LISA map input)
 
-LISAmaps <- function(shp, x=NULL, y=NULL, W=NULL, local_sims=NULL, local_moran=NULL) {
+LISAmaps <- function(shp=NULL, x=NULL, y=NULL, W=NULL, local_sims=NULL, local_moran=NULL){
   
-  # if class of shp is sf
-  if(class(shp)[1] == "sf") {
-    shp_sf <- shp
-    message('Converting sf to shp')
-    shp <- sf::as_Spatial(shp)
+  # if shp is NULL then it must have x and W
+  if(is.null(shp)){
+    # if x is NULL then stop
+    if(is.null(x)) stop('shp and x are NULL. Please add any of these parameters')
+    # if W is NULL then stop
+    if(is.null(W)) stop('shp and W are NULL. Please add any of these parameters')
   } else{
-    shp_sf <- sf::st_as_sf(shp)
+    # if class of shp is sf
+    if(class(shp)[1] == "sf") {
+      shp_sf <- shp
+      shp <- sf::as_Spatial(shp)
+    } else{
+      shp_sf <- sf::st_as_sf(shp)
+    }
+    # process the W
+    W <- nbMatrix(shp)
+    # x
+    nm <- names(shp_sf)
+    x <- shp_sf[[nm[2]]]
+    if(ncol(shp) == 3){
+      y <- shp_sf[[nm[3]]]
+    } #else {stop('shp is bigger or shorter than expected')}
   }
-  # x
-  nm <- names(shp_sf)
-  x_aux <- shp_sf[[nm[2]]]
-  message(nrow(x_aux))
+  
   message('Processing local simulations')
   # if local_sims is NULL calls localMoranSim
   if(is.null(local_sims)){
-    local_sims <- localMoranSim(shp, x, y, W)
+    local_sims <- localMoranSim(x=x, y=y, W=W)
   }
   message('Processing local Moran')
   # if local_moran is NULL calls localMoran
   if(is.null(local_moran)){
-    local_moran <- localMoran(shp, x, y, W)
+    local_moran <- localMoran(x=x, y=y, W=W)
   }
   nrow <- nrow(local_sims)
   
