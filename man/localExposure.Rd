@@ -2,18 +2,31 @@
 % Please edit documentation in R/segreg_local.R
 \name{localExposure}
 \alias{localExposure}
-\title{This function computes the local exposure index of group m to group n.
+\title{Computes the local exposure index of group m to group n.
 in situations where m=n, then the result is the isolation index.}
 \usage{
-localExposure(self)
+localExposure(pop, pop_intensity)
 }
 \arguments{
-\item{self}{list with population intensity calculated (result from popIntensity)}
+\item{pop}{A data frame with id, group, and number of population.}
+
+\item{pop_intensity}{data frame with id and population intensity for all groups. Result from \code{\link{popIntensity}}.}
 }
 \value{
-data frame with local exposure indexes, size n*n (n=number of groups) x number of localities
+data frame with local exposure indexes, size number of localities x n^2 (n=number of groups).
 }
 \description{
-This function computes the local exposure index of group m to group n.
+Computes the local exposure index of group m to group n.
 in situations where m=n, then the result is the isolation index.
+}
+\references{
+Feitosa, Camara, Monteiro, Koschitzi & Silva (2007). 
+   Global and local spatial indices of urban segregation. 
+   \emph{International Journal of Geographical Information Science}, 21(3), 299-323.
+
+Sousa (2017). Segregation Metrics. 
+   \url{https://github.com/sandrofsousa/Resolution/blob/master/Pysegreg/segregationMetrics.py}.
+}
+\author{
+Beatriz Moura dos Santos
 }

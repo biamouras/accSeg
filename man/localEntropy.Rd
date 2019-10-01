@@ -2,16 +2,29 @@
 % Please edit documentation in R/segreg_local.R
 \name{localEntropy}
 \alias{localEntropy}
-\title{This function computes the local entropy score for a unit area Ei (diversity).}
+\title{Computes the local entropy score for a unit area Ei (diversity).}
 \usage{
-localEntropy(self)
+localEntropy(pop, pop_intensity)
 }
 \arguments{
-\item{self}{list with population intensity calculated (result from popIntensity)}
+\item{pop}{A data frame with id, group, and number of population.}
+
+\item{pop_intensity}{data frame with id and population intensity for all groups. Result from \code{\link{popIntensity}}.}
 }
 \value{
-array with local indices of entropy
+An array with local indices of entropy.
 }
 \description{
-This function computes the local entropy score for a unit area Ei (diversity).
+Computes the local entropy score for a unit area Ei (diversity).
+}
+\references{
+Iceland (2004. 
+   The multigroup entropy index (also known as Theil’s H or the information theory index). 
+   \emph{US Census Bureau}, Retrieved July, 31, 2006.
+
+Sousa (2017). Segregation Metrics. 
+   \url{https://github.com/sandrofsousa/Resolution/blob/master/Pysegreg/segregationMetrics.py}.
+}
+\author{
+Beatriz Moura dos Santos
 }

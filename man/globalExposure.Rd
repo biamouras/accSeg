@@ -4,14 +4,27 @@
 \alias{globalExposure}
 \title{Computes the global exposure measures}
 \usage{
-globalExposure(self)
+globalExposure(pop, pop_intensity)
 }
 \arguments{
-\item{self}{list with population intensity calculated (result from popIntensity)}
+\item{pop}{A data frame with id, group, and number of population.}
+
+\item{pop_intensity}{data frame with id and population intensity for all groups. Result from \code{\link{popIntensity}}.}
 }
 \value{
-data frame of global exposure result, size n x n (n=number of groups)
+A data frame of global exposure result, size n x n (n=number of groups).
 }
 \description{
 This function call local exposure function and sum the results for the global index.
+}
+\references{
+Feitosa, Camara, Monteiro, Koschitzi & Silva (2007). 
+   Global and local spatial indices of urban segregation. 
+   \emph{International Journal of Geographical Information Science}, 21(3), 299-323.
+
+Sousa (2017). Segregation Metrics. 
+   \url{https://github.com/sandrofsousa/Resolution/blob/master/Pysegreg/segregationMetrics.py}.
+}
+\author{
+Beatriz Moura dos Santos
 }

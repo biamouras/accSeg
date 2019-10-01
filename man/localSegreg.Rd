@@ -4,19 +4,38 @@
 \alias{localSegreg}
 \title{Summary of local segregation indexes}
 \usage{
-localSegreg(self)
+localSegreg(pop, pop_intensity)
 }
 \arguments{
-\item{self}{list with population intensity calculated (result from popIntensity)}
+\item{pop}{A data frame with id, group, and number of population.}
+
+\item{pop_intensity}{data frame with id and population intensity for all groups. Result from \code{\link{popIntensity}}.}
 }
 \value{
 data frame with calculated indexes for each tract with the following columns
-  id: tract id
-  diss: dissimilarity index
-  ent: entropy
-  iH: index H
-  exp_m_n: exposure inde for group m with group n
+\describe{
+  \item{id} {tract id}
+  \item{diss} {dissimilarity index}
+  \item{ent} {entropy}
+  \item{iH} {index H}
+  \item{exp_m_n} {exposure inde for group m with group n}
+}
 }
 \description{
 Summary of local segregation indexes
+}
+\references{
+Feitosa, Camara, Monteiro, Koschitzi & Silva (2007). 
+   Global and local spatial indices of urban segregation. 
+   \emph{International Journal of Geographical Information Science}, 21(3), 299-323.
+
+Iceland (2004. 
+   The multigroup entropy index (also known as Theil’s H or the information theory index). 
+   \emph{US Census Bureau}, Retrieved July, 31, 2006.
+
+Sousa (2017). Segregation Metrics. 
+   \url{https://github.com/sandrofsousa/Resolution/blob/master/Pysegreg/segregationMetrics.py}.
+}
+\author{
+Beatriz Moura dos Santos]
 }

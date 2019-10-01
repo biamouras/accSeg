@@ -2,16 +2,29 @@
 % Please edit documentation in R/segreg_local.R
 \name{localDissimilarity}
 \alias{localDissimilarity}
-\title{Compute local dissimilarity for all groups.}
+\title{Computes local dissimilarity for all groups.}
 \usage{
-localDissimilarity(self)
+localDissimilarity(pop, pop_intensity)
 }
 \arguments{
-\item{self}{list with population intensity calculated (result from popIntensity)}
+\item{pop}{A data frame with id, group, and number of population.}
+
+\item{pop_intensity}{data frame with id and population intensity for all groups. Result from \code{\link{popIntensity}}.}
 }
 \value{
-array with dissimilarity for all groups, size of number of localities
+array with dissimilarity for all groups, size of number of localities.
 }
 \description{
-Compute local dissimilarity for all groups.
+Computes local dissimilarity for all groups.
+}
+\references{
+Feitosa, Camara, Monteiro, Koschitzi & Silva (2007). 
+   Global and local spatial indices of urban segregation. 
+   \emph{International Journal of Geographical Information Science}, 21(3), 299-323.
+
+Sousa (2017). Segregation Metrics. 
+   \url{https://github.com/sandrofsousa/Resolution/blob/master/Pysegreg/segregationMetrics.py}.
+}
+\author{
+Beatriz Moura dos Santos
 }

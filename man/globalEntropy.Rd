@@ -4,14 +4,27 @@
 \alias{globalEntropy}
 \title{Computes the global entropy score E (diversity).}
 \usage{
-globalEntropy(self)
+globalEntropy(pop, pop_intensity)
 }
 \arguments{
-\item{self}{list with population intensity calculated (result from popIntensity)}
+\item{pop}{A data frame with id, group, and number of population.}
+
+\item{pop_intensity}{data frame with id and population intensity for all groups. Result from \code{\link{popIntensity}}.}
 }
 \value{
-diversity score
+Display the diversity score.
 }
 \description{
 Computes the global entropy score E (diversity).
+}
+\references{
+Iceland (2004. 
+   The multigroup entropy index (also known as Theil’s H or the information theory index). 
+   \emph{US Census Bureau}, Retrieved July, 31, 2006.
+
+Sousa (2017). Segregation Metrics. 
+   \url{https://github.com/sandrofsousa/Resolution/blob/master/Pysegreg/segregationMetrics.py}.
+}
+\author{
+Beatriz Moura dos Santos
 }

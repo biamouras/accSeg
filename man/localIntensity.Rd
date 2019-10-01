@@ -2,18 +2,29 @@
 % Please edit documentation in R/segreg_prep.R
 \name{localIntensity}
 \alias{localIntensity}
-\title{Processes the local intensity for each locality}
+\title{Processes the local population intensity for each locality}
 \usage{
 localIntensity(matrix, pop)
 }
 \arguments{
-\item{matrix}{data frame (origin, destination, weight)}
+\item{matrix}{A data frame with the weight processed in \code{link{getWeight}}. 
+It must be structured as origin, destination and weight.}
 
-\item{pop}{data frame (id, group, population structure)}
+\item{pop}{A data frame structured as id, group and number of population.}
 }
 \value{
-data frame with local intensity for each group
+A data frame with local intensity for each group.
 }
 \description{
-Processes the local intensity for each locality
+Processes the local population intensity for each locality
+}
+\references{
+Feitosa, Camara, Monteiro, Koschitzi & Silva (2007). 
+   Global and local spatial indices of urban segregation. 
+   \emph{International Journal of Geographical Information Science}, 21(3), 299-323.
+
+Sousa (2017). Segregation Metrics \url{https://github.com/sandrofsousa/Resolution/blob/master/Pysegreg/segregationMetrics.py}
+}
+\author{
+Beatriz Moura dos Santos
 }

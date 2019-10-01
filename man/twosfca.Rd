@@ -2,23 +2,40 @@
 % Please edit documentation in R/accessibility_functions.R
 \name{twosfca}
 \alias{twosfca}
-\title{Processes the jobs 2SFCA accessibility}
+\title{Processes the competition accessibility.}
 \usage{
-twosfca(cutoff, oportunities, matrix, prestep = TRUE)
+twosfca(oportunities, matrix, type = "2sfca", betas = NULL,
+  cutoff = NULL, prestep = FALSE)
 }
 \arguments{
-\item{cutoff}{numeric threshold of cumulative accessibility. It must be in the same unit of the matrix}
+\item{oportunities}{data frame with id, oportunity and population structure.}
 
-\item{oportunities}{data frame with at least id and job fields}
+\item{matrix}{data frame with origin, destination and travel_time/distance structure.}
 
-\item{matrix}{data frame with origin, destination and travel_time structure}
+\item{type}{string to choose between \emph{2sfca} and \emph{shen} competition accessibilities. Defaults to 2sfca.}
 
-\item{prestep}{logical parameter. Defaults to TRUE to process the prestep 
-that divides the population by the number of counts in the catchment area of the first step}
+\item{betas}{numeric 'willing' decay factor. It must be defined when type "exponential" is chosen. Defaults to NULL.}
+
+\item{cutoff}{numeric threshold. It must be in the same unit of the matrix and it must be defined when type "gaussian" is chosen. Defaults to NULL.}
+
+\item{prestep}{logical parameter TRUE to process the prestep in 2SFCA that divides the population by the number 
+of counts in the catchment area of the first step, FALSE otherwise. Defaults to FALSE.}
 }
 \value{
-data frame with origin, acc and threshold
+data frame with origin and acc. If \emph{2sfca} type is chosen, adds the threshold column.
 }
 \description{
-Processes the jobs 2SFCA accessibility
+Process the 2 Step Floating Catchment Area or the Shen (1998) to process an accessibility with competition.
+}
+\references{
+Shen (1998). Location characteristics of inner-city neighborhoods and employment accessibility of low-wage workers. 
+    \emph{Environment and planning B: Planning and Design}, 25(3), 345-365.
+
+Neutens (2015). Accessibility, equity and health care: review and research directions for transport geographers. 
+    \emph{Journal of Transport Geography}, 43, 14-27.
+
+RESOLUTION
+}
+\author{
+Beatriz Moura dos Santos
 }

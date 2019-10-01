@@ -4,19 +4,23 @@
 \alias{globalSegreg}
 \title{Summary of global segregation indexes}
 \usage{
-globalSegreg(self, digits = 5)
+globalSegreg(pop, pop_intensity, digits = 5)
 }
 \arguments{
-\item{self}{list with population intensity calculated (result from \code{popIntensity_matrix})}
+\item{pop}{A data frame with id, group, and number of population.}
 
-\item{digits}{numeric number of digits of display. Defaults to 5}
+\item{pop_intensity}{data frame with id and population intensity for all groups. Result from \code{\link{popIntensity}}.}
+
+\item{digits}{A numeric object of number of digits to display. Defaults to 5.}
 }
 \value{
-list with calculated global indexes with the following items
-  diss: numeric dissimilarity index
-  ent: numeric entropy
-  iH: numeric index H
-  exp: data frame exposure indexes for group m with group n (size n x n)
+list with calculated global indexes with the following items:
+  \describe{
+    \item{diss} {Numeric dissimilarity index.}
+    \item{ent} {Numeric entropy.}
+    \item{iH} {Numeric index H.}
+    \item{exp} {Data frame exposure indexes for group m with group n (size n x n).}
+  }
 }
 \description{
 Summary of global segregation indexes

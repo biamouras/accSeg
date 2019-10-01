@@ -2,23 +2,30 @@
 % Please edit documentation in R/accessibility_functions.R
 \name{cumop}
 \alias{cumop}
-\title{Processes the job cumulative accessibility}
+\title{Processes the cumulative accessibility.}
 \usage{
 cumop(cutoff, oportunities, matrix)
 }
 \arguments{
-\item{cutoff}{numeric threshold of cumulative accessibility. It must be in the same unit of the matrix}
+\item{cutoff}{numeric threshold of cumulative accessibility. It must be in the same unit of the matrix.}
 
-\item{oportunities}{data frame with at least id and job fields}
+\item{oportunities}{data frame with id and oportunity structure.}
 
-\item{matrix}{data frame with origin, destination and travel_time structure}
+\item{matrix}{data frame with origin, destination and travel_time/distance structure.}
 }
 \value{
-data frame with origin, acc and threshold
+data frame with origin, acc and threshold.
 }
 \description{
-Processes the job cumulative accessibility
+The job cumulative accessibility adds up the number of oportunities inside a given travel time or distance (threshold).
 }
 \details{
-The job cumulative accessibility adds up the number of oportunities inside the threshold.
+As discussed by Handy and Niemeier (1997), the cumulative accessibility is easier to understand than the gravity one, 
+   giving "some sense of the range of choice avaiable" (Handy & Niemeier, 1997, p. 1177).
+}
+\references{
+Handy & Niemeier (1997). Measuring accessibility: An exploration of issues and alternatives. \emph{Environment and Planning A: Economy and Space}, 29(7), 1175-1194.
+}
+\author{
+Beatriz Moura dos Santos
 }

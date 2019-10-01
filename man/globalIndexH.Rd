@@ -4,14 +4,27 @@
 \alias{globalIndexH}
 \title{Computes global index H}
 \usage{
-globalIndexH(self)
+globalIndexH(pop, pop_intensity)
 }
 \arguments{
-\item{self}{list with population intensity calculated (result from popIntensity)}
+\item{pop}{A data frame with id, group, and number of population.}
+
+\item{pop_intensity}{data frame with id and population intensity for all groups. Result from \code{\link{popIntensity}}.}
 }
 \value{
 : values with global index for each group.
 }
 \description{
 Computes global index H
+}
+\references{
+Iceland (2004. 
+   The multigroup entropy index (also known as Theil’s H or the information theory index). 
+   \emph{US Census Bureau}, Retrieved July, 31, 2006.
+
+Sousa (2017). Segregation Metrics. 
+   \url{https://github.com/sandrofsousa/Resolution/blob/master/Pysegreg/segregationMetrics.py}.
+}
+\author{
+Beatriz Moura dos Santos
 }
