@@ -1,8 +1,8 @@
 #' Computes local dissimilarity for all groups.
 #'
 #' @param pop A data frame with id, group, and number of population.
-#' @param pop_intensity data frame with id and population intensity for all groups. Result from \code{\link{popIntensity}}.
-#' @return array with dissimilarity for all groups, size of number of localities.
+#' @param pop_intensity A data frame with id and population intensity for all groups. Result from \code{\link{popIntensity}}.
+#' @return  A data frame with id and local indexes of dissimilarity.
 #' @author Beatriz Moura dos Santos
 #' @references Feitosa, Camara, Monteiro, Koschitzi & Silva (2007). 
 #'    Global and local spatial indices of urban segregation. 
@@ -12,31 +12,59 @@
 
 localDissimilarity <- function(pop, pop_intensity){
   
-  local_ids <- pop_intensity$id
+  # processing the ids
+  ls <- idProcess(pop, pop_intensity)
+  pop <- ls[[1]]
+  pop_intensity <- ls[[2]]
+  rm(ls)
+  gc()
   
-  pop <- pop %>%
-    dplyr::filter(.data$id %in% local_ids) %>%
-    dplyr::select(-id)
+  # processing population
+  Njm <- pop %>% 
+    tidyr::gather('group', 'Njm', -.data$id)
   
-  pop_sum <- apply(pop, 1, sum, na.rm=T)
+  Nm <- Njm %>% 
+    dplyr::group_by(.data$group) %>% 
+    dplyr::summarise(Nm = sum(.data$Njm, na.rm=T))
   
+  Nj <- Njm %>% 
+    dplyr::group_by(.data$id) %>% 
+    dplyr::summarise(Nj = sum(.data$Njm, na.rm=T))
+  
+  # processing the local proportion of group m in locality j
   if(nrow(pop_intensity) == 0){
-    lj <- as.numeric(pop_sum)
-    tjm <- pop / lj
+    ljm <- Njm %>% 
+      dplyr::rename(ljm = Njm)
+    lj <- Nj %>% 
+      dplyr::rename(lj = Nj)
   } else{
-    locality <- pop_intensity[,-1]
-    lj <- apply(locality, 1, sum)
-    tjm <- locality / lj
+    ljm <- pop_intensity %>% 
+      tidyr::gather('group', 'ljm', -.data$id)
+    
+    lj <- ljm %>% 
+      dplyr::group_by(.data$id) %>% 
+      dplyr::summarise(lj = sum(.data$ljm, na.rm=T))
   }
   
-  pop_total <- sum(pop, na.rm=T)
-  tm <- apply(pop, 2, sum) / pop_total
+  tjm <- ljm %>% 
+    dplyr::left_join(lj, by = 'id') %>% 
+    dplyr::mutate(tjm = .data$ljm/.data$lj) 
   
-  index_i <- sum(tm * (1 - tm), na.rm = T)
+  # processing the proportion of group m in the city
+  pop_total <- sum(Njm$Njm, na.rm=T)
+  Nm <-  Nm %>% 
+    dplyr::mutate(tm = .data$Nm/pop_total)
   
-  local_diss <- apply(abs(sweep(tjm, 2, tm, '-')) * t(pop_sum) / (2 * pop_total * index_i), 1, sum, na.rm=T)
-  local_diss <- matrix(local_diss, ncol=1)
-  local_diss[is.nan(local_diss)] <- 0
+  # processing index i
+  index_i <- sum(Nm$tm * (1 - Nm$tm), na.rm = T)
+  
+  # processing local dissimilarity
+  local_diss <- Nj %>% 
+    dplyr::left_join(tjm, by = 'id') %>% 
+    dplyr::left_join(Nm, by = 'group') %>% 
+    dplyr::mutate(diss_group = (.data$Nj/(2*pop_total*index_i))*abs(.data$tjm-.data$tm)) %>% 
+    dplyr::group_by(.data$id) %>% 
+    dplyr::summarise(diss = sum(.data$diss_group, na.rm=T))
   
   return (local_diss)
 }
@@ -44,7 +72,7 @@ localDissimilarity <- function(pop, pop_intensity){
 #' Computes the local entropy score for a unit area Ei (diversity).
 #'
 #' @inheritParams localDissimilarity
-#' @return An array with local indices of entropy.
+#' @return A data frame with id and local indexes of entropy.
 #' @author Beatriz Moura dos Santos
 #' @references Iceland (2004. 
 #'    The multigroup entropy index (also known as Theil’s H or the information theory index). 
@@ -54,31 +82,43 @@ localDissimilarity <- function(pop, pop_intensity){
 
 localEntropy <- function(pop, pop_intensity){
   
-  local_ids <- pop_intensity$id
+  # processing the ids
+  ls <- idProcess(pop, pop_intensity)
+  pop <- ls[[1]]
+  pop_intensity <- ls[[2]]
+  rm(ls)
+  gc()
   
-  pop <- pop %>%
-    dplyr::filter(.data$id %in% local_ids) %>%
-    dplyr::select(-id)
+  # processing population
+  Njm <- pop %>% 
+    tidyr::gather('group', 'Njm', -.data$id)
   
-  pop_sum <- apply(pop, 1, sum, na.rm=T)
+  Nj <- Njm %>% 
+    dplyr::group_by(.data$id) %>% 
+    dplyr::summarise(Nj = sum(.data$Njm, na.rm=T))
   
-  if (nrow(pop_intensity) == 0){
-    proportion <- pop / as.numeric(pop_sum)
+  if(nrow(pop_intensity) == 0){
+    ljm <- Njm %>% 
+      dplyr::rename(ljm = Njm)
+    lj <- Nj %>% 
+      dplyr::rename(lj = Nj)
   } else{
-    polygon_sum <- apply(pop_intensity[,-1], 1, sum, na.rm=T)
-    proportion <- pop_intensity[,-1] / polygon_sum
+    ljm <- pop_intensity %>% 
+      tidyr::gather('group', 'ljm', -.data$id)
+    
+    lj <- ljm %>% 
+      dplyr::group_by(.data$id) %>% 
+      dplyr::summarise(lj = sum(.data$ljm, na.rm=T))
   }
-  entropy <- proportion * log(1 / proportion)
-  entropy$id <- local_ids
   
-  entropy <- entropy %>%
-    tidyr::gather('group', 'ent', 1:ncol(pop)) %>%
-    dplyr::mutate(ent = ifelse(is.na(.data$ent) | is.infinite(.data$ent), 0, .data$ent)) %>%
-    tidyr::spread(.data$group, .data$ent) %>%
-    dplyr::select(-id)
+  tjm <- ljm %>% 
+    dplyr::left_join(lj, by = 'id') %>% 
+    dplyr::mutate(tjm = .data$ljm/.data$lj) 
   
-  entropy <- apply(entropy, 1, sum, na.rm=T)
-  entropy <- matrix(entropy, ncol=1)
+  entropy <- tjm %>% 
+    dplyr::mutate(ent_group = .data$tjm * log(1/.data$tjm)) %>% 
+    dplyr::group_by(.data$id) %>% 
+    dplyr::summarise(ent = sum(.data$ent_group))
   
   return(entropy)
 }
@@ -97,41 +137,58 @@ localEntropy <- function(pop, pop_intensity){
 
 localExposure <- function(pop, pop_intensity){
   
-  local_ids <- pop_intensity$id
+  # processing the ids
+  ls <- idProcess(pop, pop_intensity)
+  pop <- ls[[1]]
+  pop_intensity <- ls[[2]]
+  rm(ls)
+  gc()
   
-  pop <- pop %>%
-    dplyr::filter(.data$id %in% local_ids) %>%
-    dplyr::select(-id)
+  # processing local exposure
+  Njm <- pop %>% 
+    tidyr::gather('group', 'Njm', -.data$id)
   
-  pop_sum <- apply(pop, 1, sum, na.rm=T)
+  Nm <- Njm %>% 
+    dplyr::group_by(.data$group) %>% 
+    dplyr::summarise(Nm = sum(.data$Njm, na.rm=T))
   
-  m <- ncol(pop)
-  j <- nrow(pop)
+  local_expo <- Njm %>% 
+    dplyr::left_join(Nm, by = 'group') %>% 
+    dplyr::mutate(l_expo = .data$Njm/.data$Nm)
   
-  local_expo <- sweep(pop, 2, apply(pop, 2, sum, na.rm=T), '/')
-  local_expo <- dplyr::bind_cols(id = local_ids, local_expo) %>%
-    tidyr::gather('group_exp', 'pop', (1:m)+1)
-  
-  locality <- pop_intensity[,-1]
+  # processing local rate
   if (nrow(pop_intensity) == 0){
-    locality_rate <- pop / pop_sum
+    Nj <- Njm %>% 
+      dplyr::group_by(.data$id) %>% 
+      dplyr::summarise(Nj = sum(.data$Njm, na.rm=T))
+    
+    tjm <- Njm %>% 
+      dplyr::left_join(Nj, by = 'id') %>% 
+      dplyr::mutate(tjm = .data$Njm/.data$Nj)
   } else{
-    locality_rate <- locality / apply(locality,1,sum, na.rm=T)
+    
+    ljn <- pop_intensity %>% 
+      tidyr::gather('group', 'ljn', -.data$id)
+    
+    lj <- ljn %>% 
+      dplyr::group_by(.data$id) %>% 
+      dplyr::summarise(lj = sum(.data$ljn, na.rm=T))
+    
+    tjm <- ljn %>% 
+      dplyr::left_join(lj, by = 'id') %>% 
+      dplyr::mutate(tjm = .data$ljn/.data$lj) %>% 
+      dplyr::rename(gp = .data$group)
   }
-  locality_rate <- dplyr::bind_cols(id = local_ids, locality_rate)
   
-  exposure_rs <- local_expo %>%
-    dplyr::left_join(locality_rate, by='id') %>%
-    tidyr::gather('group_rt', 'rate', (4:(3+m))) %>%
-    dplyr::mutate(exposure = .data$pop*.data$rate,
-                  exposure = ifelse(is.nan(.data$exposure), 0, .data$exposure),
-                  m_n = paste0(.data$group_exp, '_', .data$group_rt)) %>%
-    dplyr::select(.data$id, .data$exposure, .data$m_n) %>%
-    tidyr::spread(.data$m_n, .data$exposure)
+  # processing exposure
+  exposure <- local_expo %>% 
+    dplyr::left_join(tjm, by = 'id') %>% 
+    dplyr::mutate(expo = .data$l_expo*.data$tjm,
+                  m_n = paste0(.data$group,'_',.data$gp)) %>% 
+    dplyr::select(.data$id, .data$expo, .data$m_n) %>% 
+    tidyr::spread(.data$m_n, .data$expo)
   
-  exposure_rs <- exposure_rs[,-1]
-  
-  return(exposure_rs)
+  return(exposure)
 }
 
 #' Computes the local entropy index H for all localities.
@@ -150,17 +207,28 @@ localIndexH <- function(pop, pop_intensity){
   local_entropy <- localEntropy(pop, pop_intensity)
   global_entropy <- globalEntropy(pop, pop_intensity)
   
-  local_ids <- pop_intensity$id
+  # processing the ids
+  ls <- idProcess(pop, pop_intensity)
+  pop <- ls[[1]]
+  pop_intensity <- ls[[2]]
+  rm(ls)
+  gc()
   
-  pop <- pop %>%
-    dplyr::filter(.data$id %in% local_ids) %>%
-    dplyr::select(-id)
+  # processing population
+  Njm <- pop %>% 
+    tidyr::gather('group', 'Njm', -.data$id)
   
-  pop_sum <- apply(pop, 1, sum, na.rm=T)
+  Nj <- Njm %>% 
+    dplyr::group_by(.data$id) %>% 
+    dplyr::summarise(Nj = sum(.data$Njm, na.rm=T))
   
-  et <- global_entropy * sum(pop_sum, na.rm=T)
-  eei <- global_entropy - local_entropy
-  h_local <- pop_sum * eei / et
+  N <- sum(Njm$Njm, na.rm = T)
+  
+  # processing local Theil's
+  h_local <- Nj %>% 
+    dplyr::left_join(local_entropy, by = 'id') %>% 
+    dplyr::mutate(iH = .data$Nj*(global_entropy - .data$ent)/(global_entropy*N)) %>% 
+    dplyr::select(.data$id, .data$iH)
   
   return(h_local)
 }
@@ -170,11 +238,11 @@ localIndexH <- function(pop, pop_intensity){
 #' @inheritParams localDissimilarity
 #' @return data frame with calculated indexes for each tract with the following columns
 #' \describe{
-#'   \item{id} {tract id}
-#'   \item{diss} {dissimilarity index}
-#'   \item{ent} {entropy}
-#'   \item{iH} {index H}
-#'   \item{exp_m_n} {exposure inde for group m with group n}
+#'   \item{id}{tract id}
+#'   \item{diss}{dissimilarity index}
+#'   \item{ent}{entropy}
+#'   \item{iH}{index H}
+#'   \item{exp_m_n}{exposure inde for group m with group n}
 #' }  
 #' @author Beatriz Moura dos Santos]
 #' @references Feitosa, Camara, Monteiro, Koschitzi & Silva (2007). 
@@ -188,14 +256,10 @@ localIndexH <- function(pop, pop_intensity){
 
 localSegreg <- function(pop, pop_intensity){
   
-  results <- data.frame(
-    id = pop_intensity$id,
-    diss = localDissimilarity(pop, pop_intensity),
-    ent = localEntropy(pop, pop_intensity),
-    iH = localIndexH(pop, pop_intensity)
-  )
-  
-  results <- cbind(results, localExposure(pop, pop_intensity))
+  results <- localDissimilarity(pop, pop_intensity) %>% 
+    dplyr::left_join(localEntropy(pop, pop_intensity), by = 'id') %>% 
+    dplyr::left_join(localIndexH(pop, pop_intensity), by = 'id') %>% 
+    dplyr::left_join(localExposure(pop, pop_intensity), by = 'id')
   
   return(results)
 }

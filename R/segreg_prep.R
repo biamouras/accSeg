@@ -1,3 +1,24 @@
+#' Processes the ids of data frame 1 and data frame 2
+#' 
+#' @param df1 A data frame with ids to be processed.
+#' @param df2 A data frame with ids to be processed.
+#' @return A list with the two data frames processed with common ids and with the same order.
+#' #' @author Beatriz Moura dos Santos
+
+idProcess <- function(df1, df2){
+  ids <- intersect(df1$id, df2$id)
+  
+  df1 <- df1 %>%
+    dplyr::filter(.data$id %in% ids) %>%
+    dplyr::arrange(match(.data$id, ids)) 
+  
+  df2 <- df2 %>%
+    dplyr::filter(.data$id %in% ids) %>%
+    dplyr::arrange(match(.data$id, ids)) 
+  
+  list(df1, df2)
+}
+
 #' Computes the weights for neighborhood.
 #'
 #' @param matrix A data frame with travel time/distance matrix (origin, destination, travel_time).
@@ -53,7 +74,7 @@ localIntensity <- function(matrix, pop){
     dplyr::select(-.data$destination) %>%
     dplyr::mutate(int = .data$weight * .data$population) %>%
     dplyr::group_by(.data$group) %>%
-    dplyr::summarise(local_int = sum(.data$int, na.rm=T)/sum(.data$weight, na.rm=T)) %>%
+    dplyr::summarise(local_int = sum(.data$int, na.rm=T)) %>%
     dplyr::ungroup()
 }
 
@@ -77,19 +98,23 @@ popIntensity <- function(matrix, pop,
   names(matrix) <- c('origin', 'destination', 'travel_time')
   
   # getting attributes values
-  ids <- unique(pop$id)
+  ids <- intersect(pop$id, unique(matrix$origin))
   n_local <- length(ids)
   pop$id <- as.character(pop$id)
   
   message('Filtering origin IDs')
   # selecting the same population and matrix localities
-  matrix <- dplyr::filter(matrix, .data$origin %in% ids)
+  matrix <- matrix %>% 
+    dplyr::mutate(origin = as.character(.data$origin),
+                  destination = as.character(.data$destination)) %>% 
+    dplyr::filter(.data$origin %in% ids)
   
   message('Processing weights')
   matrix <- getWeight(matrix, bandwidth, weightmethod)
   
   pop <- pop %>% 
-    tidyr::gather(group, population, -id)
+    dplyr::filter(.data$id %in% ids) %>% 
+    tidyr::gather('group', 'population', -id)
   
   message('Processing local intensity')
   locality_temp <- matrix %>%

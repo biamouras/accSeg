@@ -9,7 +9,7 @@ globalDissimilarity(pop, pop_intensity)
 \arguments{
 \item{pop}{A data frame with id, group, and number of population.}
 
-\item{pop_intensity}{data frame with id and population intensity for all groups. Result from \code{\link{popIntensity}}.}
+\item{pop_intensity}{A data frame with id and population intensity for all groups. Result from \code{\link{popIntensity}}.}
 }
 \value{
 Display global value of dissimilarity.

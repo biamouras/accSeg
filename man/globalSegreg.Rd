@@ -9,17 +9,17 @@ globalSegreg(pop, pop_intensity, digits = 5)
 \arguments{
 \item{pop}{A data frame with id, group, and number of population.}
 
-\item{pop_intensity}{data frame with id and population intensity for all groups. Result from \code{\link{popIntensity}}.}
+\item{pop_intensity}{A data frame with id and population intensity for all groups. Result from \code{\link{popIntensity}}.}
 
 \item{digits}{A numeric object of number of digits to display. Defaults to 5.}
 }
 \value{
 list with calculated global indexes with the following items:
   \describe{
-    \item{diss} {Numeric dissimilarity index.}
-    \item{ent} {Numeric entropy.}
-    \item{iH} {Numeric index H.}
-    \item{exp} {Data frame exposure indexes for group m with group n (size n x n).}
+    \item{diss}{Numeric dissimilarity index.}
+    \item{ent}{Numeric entropy.}
+    \item{iH}{Numeric index H.}
+    \item{exp}{Data frame exposure indexes for group m with group n (size n x n).}
   }
 }
 \description{

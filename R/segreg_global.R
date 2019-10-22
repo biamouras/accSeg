@@ -13,7 +13,7 @@
 globalDissimilarity <- function(pop, pop_intensity){
   
   local_diss <- localDissimilarity(pop, pop_intensity)
-  global_diss <- sum(local_diss, na.rm=T)
+  global_diss <- sum(local_diss[,-1], na.rm=T)
   
   return(global_diss)
 }
@@ -31,27 +31,33 @@ globalDissimilarity <- function(pop, pop_intensity){
 
 globalEntropy <- function(pop, pop_intensity){
   
-  local_ids <- pop_intensity$id
+  # processing the ids
+  ls <- idProcess(pop, pop_intensity)
+  pop <- ls[[1]]
+  pop_intensity <- ls[[2]]
+  rm(ls)
+  gc()
   
-  pop <- pop %>%
-    dplyr::filter(.data$id %in% local_ids) %>%
-    dplyr::select(-id)
+  # processing population
+  Njm <- pop %>% 
+    tidyr::gather('group', 'Njm', -.data$id)
   
-  pop_sum <- apply(pop, 1, sum, na.rm=T)
+  Nj <- Njm %>% 
+    dplyr::group_by(.data$id) %>% 
+    dplyr::summarise(Nj = sum(.data$Njm, na.rm=T))
   
-  pop_total <- sum(pop, na.rm=T)
+  Nm <- Njm %>% 
+    dplyr::group_by(.data$group) %>% 
+    dplyr::summarise(Nm = sum(.data$Njm, na.rm=T))
   
-  prop <- apply(pop, 2, sum, na.rm=T)
-  n <- length(prop)
-  group_score <- array(dim=n)
+  N <- sum(Njm$Njm, na.rm=T)
   
-  group_score <- sapply(1:n, function(i){
-    group <- prop[i]
-    group_idx <- group / pop_total * log(1 / (group / pop_total))
-    group_idx
-  })
+  n <- nrow(Nm)
   
-  entropy <- sum(group_score, na.rm=T)
+  score <-  Nm %>% 
+    dplyr::mutate(score = .data$Nm/N * log(.data$Nm/N)) 
+  
+  entropy <- sum(score$score, na.rm = T)
   
   return(entropy)
 }
@@ -71,13 +77,12 @@ globalEntropy <- function(pop, pop_intensity){
 globalExposure <- function(pop, pop_intensity){
   
   m <- ncol(pop)-1
-  local_exp  <- localExposure(pop, pop_intensity)
-  global_exp  <- apply(local_exp, 2, sum, na.rm=T)
-  global_exp <- matrix(global_exp, nrow = m, ncol=m, byrow=T)
-  
-  global_exp <- as.data.frame(global_exp,
-                              row.names=paste0('G',1:m))
-  names(global_exp) <- paste0('G',1:m)
+  local_exp  <- accSeg:::localExposure(pop, pop_intensity)
+  global_exp  <- local_exp %>% 
+    tidyr::gather('m_n', 'expo', -.data$id) %>% 
+    dplyr::group_by(.data$m_n) %>% 
+    dplyr::summarise(global_exp = sum(.data$expo, na.rm=T)) %>% 
+    tidyr::separate(.data$m_n, into = c('m','n'),sep='_')
   
   return(global_exp)
 }
@@ -96,7 +101,7 @@ globalExposure <- function(pop, pop_intensity){
 globalIndexH <- function(pop, pop_intensity){
   
   h_local <- localIndexH(pop, pop_intensity)
-  h_global <- sum(h_local, na.rm=T)
+  h_global <- sum(h_local[,-1], na.rm=T)
   
   return(h_global)
 }
@@ -107,10 +112,10 @@ globalIndexH <- function(pop, pop_intensity){
 #' @param digits A numeric object of number of digits to display. Defaults to 5.
 #' @return list with calculated global indexes with the following items:
 #'   \describe{
-#'     \item{diss} {Numeric dissimilarity index.}
-#'     \item{ent} {Numeric entropy.}
-#'     \item{iH} {Numeric index H.}
-#'     \item{exp} {Data frame exposure indexes for group m with group n (size n x n).}
+#'     \item{diss}{Numeric dissimilarity index.}
+#'     \item{ent}{Numeric entropy.}
+#'     \item{iH}{Numeric index H.}
+#'     \item{exp}{Data frame exposure indexes for group m with group n (size n x n).}
 #'   }
 
 globalSegreg <- function(pop, pop_intensity, digits=5){
@@ -120,18 +125,23 @@ globalSegreg <- function(pop, pop_intensity, digits=5){
   ent <- globalEntropy(pop, pop_intensity)
   iH <- globalIndexH(pop, pop_intensity)
   
+  exp_out <- as.matrix(xtabs(global_exp ~ m + n, data = exp))
+  
   message(paste0('Global Segregation Indexes\n\n' ,
                  'Dissimilarity Index\n', round(diss, digits),'\n\n',
-                 'Exposure Indexes\n', paste0(utils::capture.output(round(exp, digits)), collapse='\n'),'\n\n',
+                 'Exposure Indexes\n', paste0(utils::capture.output(round(exp_out, digits)), collapse='\n'),'\n\n',
                  'Entropy Index\n', round(ent, digits), '\n\n',
                  'Index H\n', round(iH, digits)))
   
-  results <- list(
-    diss = diss,
-    ent = ent,
-    iH = iH,
-    exp = exp
-  )
+  exp <- dplyr::rename(exp, value = global_exp) %>% 
+    dplyr::mutate(measure = paste0(.data$m, '_', .data$n)) %>% 
+    dplyr::select(-m,-n
+                  )
+  results <- data.frame(diss = diss,
+                        ent = ent,
+                        iH = iH) %>% 
+    tidyr::gather('measure', 'value', 1:3) %>% 
+    dplyr::bind_rows(exp)
   
   return(results)
 }

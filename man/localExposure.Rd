@@ -10,7 +10,7 @@ localExposure(pop, pop_intensity)
 \arguments{
 \item{pop}{A data frame with id, group, and number of population.}
 
-\item{pop_intensity}{data frame with id and population intensity for all groups. Result from \code{\link{popIntensity}}.}
+\item{pop_intensity}{A data frame with id and population intensity for all groups. Result from \code{\link{popIntensity}}.}
 }
 \value{
 data frame with local exposure indexes, size number of localities x n^2 (n=number of groups).

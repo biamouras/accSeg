@@ -9,16 +9,16 @@ localSegreg(pop, pop_intensity)
 \arguments{
 \item{pop}{A data frame with id, group, and number of population.}
 
-\item{pop_intensity}{data frame with id and population intensity for all groups. Result from \code{\link{popIntensity}}.}
+\item{pop_intensity}{A data frame with id and population intensity for all groups. Result from \code{\link{popIntensity}}.}
 }
 \value{
 data frame with calculated indexes for each tract with the following columns
 \describe{
-  \item{id} {tract id}
-  \item{diss} {dissimilarity index}
-  \item{ent} {entropy}
-  \item{iH} {index H}
-  \item{exp_m_n} {exposure inde for group m with group n}
+  \item{id}{tract id}
+  \item{diss}{dissimilarity index}
+  \item{ent}{entropy}
+  \item{iH}{index H}
+  \item{exp_m_n}{exposure inde for group m with group n}
 }
 }
 \description{
