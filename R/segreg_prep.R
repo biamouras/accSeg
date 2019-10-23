@@ -6,15 +6,19 @@
 #' #' @author Beatriz Moura dos Santos
 
 idProcess <- function(df1, df2){
+  
+  df1 <- data.table::data.table(df1)
+  df2 <- data.table::data.table(df2)
+  
+  nm_df1 <- names(df1)
+  names(df1) <- c('id', nm_df1[-1])
+  nm_df2 <- names(df2)
+  names(df2) <- c('id', nm_df2[-1])
+  
   ids <- intersect(df1$id, df2$id)
   
-  df1 <- df1 %>%
-    dplyr::filter(.data$id %in% ids) %>%
-    dplyr::arrange(match(.data$id, ids)) 
-  
-  df2 <- df2 %>%
-    dplyr::filter(.data$id %in% ids) %>%
-    dplyr::arrange(match(.data$id, ids)) 
+  df1 <- data.table::setorder(df1, id)[id %in% ids]
+  df2 <- data.table::setorder(df2, id)[id %in% ids]
   
   list(df1, df2)
 }
@@ -63,13 +67,10 @@ getWeight <- function(matrix, bandwidth, weightmethod = 'gaussian'){
 #' @references Sousa (2017). Segregation Metrics \url{https://github.com/sandrofsousa/Resolution/blob/master/Pysegreg/segregationMetrics.py}
 
 localIntensity <- function(matrix, pop){
-  matrix %>%
-    dplyr::right_join(pop, by=c('destination'='id')) %>%
-    dplyr::select(-.data$destination) %>%
-    dplyr::mutate(int = .data$weight * .data$population) %>%
-    dplyr::group_by(.data$group) %>%
-    dplyr::summarise(local_int = sum(.data$int, na.rm=T)) %>%
-    dplyr::ungroup()
+  df <- merge(matrix, pop, by.x = 'destination', by.y = 'id')
+  df$int <- df$weight * df$population
+  
+  data.table::data.table(df)[,.(local_int = sum(int, na.rm = T)),by=group]
 }
 
 #' Computes the local population intensity for all groups based on a time/distance matrix.
@@ -94,35 +95,57 @@ popIntensity <- function(matrix, pop,
   # getting attributes values
   ids <- intersect(pop$id, unique(matrix$origin))
   n_local <- length(ids)
-  pop$id <- as.character(pop$id)
   
-  message('Filtering origin IDs')
+  message('Filtering origin and population IDs')
   # selecting the same population and matrix localities
-  matrix <- matrix %>% 
-    dplyr::mutate(origin = as.character(.data$origin),
-                  destination = as.character(.data$destination)) %>% 
-    dplyr::filter(.data$origin %in% ids)
+  matrix <- data.table::data.table(matrix)
+  matrix <- matrix[origin %in% ids & destination %in% ids]
+  
+  pop <- data.table::data.table(pop)
+  pop <- pop[id %in% ids]
+  pop_names <- names(pop)
+  pop <- data.table::melt(pop,
+                          id.vars = pop_names[1],
+                          measure.vars = pop_names[-1],
+                          variable.name = 'group',
+                          value.name = 'population')
   
   message('Processing weights')
   matrix <- getWeight(matrix, bandwidth, weightmethod)
   
-  pop <- pop %>% 
-    dplyr::filter(.data$id %in% ids) %>% 
-    tidyr::gather('group', 'population', -id)
-  
   message('Processing local intensity')
-  locality_temp <- matrix %>%
-    dplyr::group_by(.data$origin) %>%
-    dplyr::group_modify(~ localIntensity(.,pop)) %>%
-    dplyr::ungroup()
+  locality_temp <- matrix[,localIntensity(.SD,pop), by = origin]
+  locality_temp <- locality_temp[,.(id=origin, group, local_int)]
   
-  locality_temp[is.na(locality_temp$local_int), 'local_int'] <- 0
-  locality_temp[is.nan(locality_temp$local_int), 'local_int'] <- 0
-  locality_temp[locality_temp$local_int < 0, 'local_int'] <- 0
   
-  locality_temp <- locality_temp %>%
-    tidyr::spread(.data$group, .data$local_int)
-  names(locality_temp) <- c('id', names(locality_temp)[-1])
   
   return(locality_temp)
+}
+
+#' Processes the population values.
+#' 
+#' @param pop A data table structured as id and columns with number of population for each group.
+#' @return A list with the following items
+#' \describe{
+#'     \item{Njm}{A data table with id, group and population values by locality.}
+#'     \item{Nj}{A data table with id and population values by locality.}
+#'     \item{Nm}{A data table with group and population totals.}
+#'     \item{N}{A data table with population total.}
+#' }
+#' @author Beatriz Moura dos Santos
+#' 
+
+popSummary <- function(pop){
+  pop_names <- names(pop)
+  Njm <- data.table::melt(pop,
+                          id.vars = pop_names[1],
+                          measure.vars = pop_names[-1],
+                          variable.names = 'group',
+                          value.names = 'Njm') 
+  
+  Nj <- Njm[,Nj:=sum(Njm, na.rm=T), by = id] 
+  
+  Nm <- Njm[,Nm:=sum(Njm, na.rm=T), by = group] 
+  
+  N <- Njm[,sum(Njm, na.rm=T)]
 }
