@@ -32,26 +32,20 @@ idProcess <- function(df1, df2){
 #'    \url{https://www.spatialanalysisonline.com/HTML/index.html}
 
 getWeight <- function(matrix, bandwidth, weightmethod = 'gaussian'){
-  
+  matrix$rate <- matrix$travel_time/bandwidth
   if(weightmethod=='gaussian'){
-    matrix <- matrix %>%
-      dplyr::mutate(rate = .data$travel_time/bandwidth,
-                    weight = exp(-0.5 * .data$rate^2)) %>%
-      dplyr::select(-.data$travel_time, -.data$rate)
+    matrix$weight <- exp(-0.5 * matrix$rate^2)
   } else if(weightmethod=='bi-squared'){
-    matrix <- matrix %>%
-      dplyr::mutate(rate = .data$travel_time/bandwidth,
-                    weight = ifelse(.data$rate <= 1, (1 - .data$rate^2)^2, 0)) %>%
-      dplyr::select(-.data$travel_time, -.data$rate)
+    matrix$weight <- (1 - matrix$rate^2)^2
+    matrix[matrix$rate > 1, 'weight'] <- 0
   } else if(weightmethod=='moving window'){
-    matrix <- matrix %>%
-      dplyr::mutate(rate = .data$travel_time/bandwidth,
-                    weight = ifelse(.data$rate <= 1, 1, 0))%>%
-      dplyr::select(-.data$travel_time, -.data$rate)
+    matrix$weight <- 1
+    matrix[matrix$rate > 1, 'weight'] <- 0
   } else{
     stop('Invalid weight method selected!')
   }
   
+  matrix <- matrix[,c('origin', 'destination','weight')]
   return(matrix)
 }
 
