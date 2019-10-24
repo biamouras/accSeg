@@ -5,7 +5,7 @@
 #' @return A list with the two data frames processed with common ids and with the same order.
 #' #' @author Beatriz Moura dos Santos
 
-idProcess <- function(df1, df2){
+idProcess1 <- function(df1, df2){
   
   df1 <- data.table::data.table(df1)
   df2 <- data.table::data.table(df2)
@@ -35,21 +35,40 @@ idProcess <- function(df1, df2){
 #'    \emph{Geospatial Analysis. A Comprehensive Guide to PrinciplesTechniques and Software Tools}. 
 #'    \url{https://www.spatialanalysisonline.com/HTML/index.html}
 
-getWeight <- function(matrix, bandwidth, weightmethod = 'gaussian'){
-  matrix$rate <- matrix$travel_time/bandwidth
+getWeight1 <- function(matrix, bandwidth, weightmethod = 'gaussian'){
+
   if(weightmethod=='gaussian'){
-    matrix$weight <- exp(-0.5 * matrix$rate^2)
+    matrix[
+      , rate := travel_time/bandwidth
+      ][
+        ,weight := exp(-0.5 * rate^2)
+        ][
+          ,.(origin, destination, weight)
+          ]
   } else if(weightmethod=='bi-squared'){
-    matrix$weight <- (1 - matrix$rate^2)^2
-    matrix[matrix$rate > 1, 'weight'] <- 0
+    matrix[
+      , rate := travel_time/bandwidth
+      ][
+        ,weight := (1 - rate^2)^2
+        ][
+          rate > 1, weight := 0
+          ][
+            ,.(origin, destination, weight)
+            ]
   } else if(weightmethod=='moving window'){
-    matrix$weight <- 1
-    matrix[matrix$rate > 1, 'weight'] <- 0
+    matrix[
+      , rate := travel_time/bandwidth
+      ][
+        ,weight :=  1
+        ][
+          rate > 1, weight := 0
+          ][
+            ,.(origin, destination, weight)
+            ]
   } else{
     stop('Invalid weight method selected!')
   }
   
-  matrix <- matrix[,c('origin', 'destination','weight')]
   return(matrix)
 }
 
@@ -66,11 +85,11 @@ getWeight <- function(matrix, bandwidth, weightmethod = 'gaussian'){
 #'    \emph{International Journal of Geographical Information Science}, 21(3), 299-323.
 #' @references Sousa (2017). Segregation Metrics \url{https://github.com/sandrofsousa/Resolution/blob/master/Pysegreg/segregationMetrics.py}
 
-localIntensity <- function(matrix, pop){
-  df <- merge(matrix, pop, by.x = 'destination', by.y = 'id')
-  df$int <- df$weight * df$population
+localIntensity1 <- function(matrix, pop){
+  df <- data.table::merge(matrix, pop, by.x = 'destination', by.y = 'id')
+  df[,int := weight * population]
   
-  data.table::data.table(df)[,.(local_int = sum(int, na.rm = T)),by=group]
+  df[,.(local_int := sum(int, na.rm = T)),by=group]
 }
 
 #' Computes the local population intensity for all groups based on a time/distance matrix.
@@ -86,7 +105,7 @@ localIntensity <- function(matrix, pop){
 #'    \emph{Geospatial Analysis. A Comprehensive Guide to PrinciplesTechniques and Software Tools}. 
 #'    \url{https://www.spatialanalysisonline.com/HTML/index.html}
 
-popIntensity <- function(matrix, pop,
+popIntensity1 <- function(matrix, pop,
                          bandwidth=60,
                          weightmethod='gaussian'){
   
@@ -98,10 +117,10 @@ popIntensity <- function(matrix, pop,
   
   message('Filtering origin and population IDs')
   # selecting the same population and matrix localities
-  matrix <- data.table::data.table(matrix)
+  matrix <- data.table::as.data.table(matrix)
   matrix <- matrix[origin %in% ids & destination %in% ids]
   
-  pop <- data.table::data.table(pop)
+  pop <- data.table::as.data.table(pop)
   pop <- pop[id %in% ids]
   pop_names <- names(pop)
   pop <- data.table::melt(pop,
@@ -111,13 +130,11 @@ popIntensity <- function(matrix, pop,
                           value.name = 'population')
   
   message('Processing weights')
-  matrix <- getWeight(matrix, bandwidth, weightmethod)
+  matrix <- getWeight1(matrix, bandwidth, weightmethod)
   
   message('Processing local intensity')
-  locality_temp <- matrix[,localIntensity(.SD,pop), by = origin]
-  locality_temp <- locality_temp[,.(id=origin, group, local_int)]
-  
-  
+  locality_temp <- matrix[,localIntensity1(.SD,pop), by = origin]
+  locality_temp <- locality_temp[,.(id := origin, group, local_int)]
   
   return(locality_temp)
 }
@@ -135,17 +152,23 @@ popIntensity <- function(matrix, pop,
 #' @author Beatriz Moura dos Santos
 #' 
 
-popSummary <- function(pop){
+popSummary1 <- function(pop){
   pop_names <- names(pop)
+  pop <- data.table::data.table(pop)
   Njm <- data.table::melt(pop,
                           id.vars = pop_names[1],
                           measure.vars = pop_names[-1],
-                          variable.names = 'group',
-                          value.names = 'Njm') 
+                          variable.name = 'group',
+                          value.name = 'Njm') 
   
-  Nj <- Njm[,Nj:=sum(Njm, na.rm=T), by = id] 
+  Nj <- Njm[,.(Nj=sum(Njm, na.rm=T)), by = id] 
   
-  Nm <- Njm[,Nm:=sum(Njm, na.rm=T), by = group] 
+  Nm <- Njm[,.(Nm=sum(Njm, na.rm=T)), by = group] 
   
-  N <- Njm[,sum(Njm, na.rm=T)]
+  N <- Njm[,.(N=sum(Njm, na.rm=T))]$N
+  
+  list(Njm = Njm,
+       Nj = Nj,
+       Nm = Nm,
+       N = N)
 }

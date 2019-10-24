@@ -20,16 +20,10 @@ localDissimilarity <- function(pop, pop_intensity){
   gc()
   
   # processing population
-  Njm <- pop %>% 
-    tidyr::gather('group', 'Njm', -.data$id)
-  
-  Nm <- Njm %>% 
-    dplyr::group_by(.data$group) %>% 
-    dplyr::summarise(Nm = sum(.data$Njm, na.rm=T))
-  
-  Nj <- Njm %>% 
-    dplyr::group_by(.data$id) %>% 
-    dplyr::summarise(Nj = sum(.data$Njm, na.rm=T))
+  popSum <- popSummary(pop)
+  Njm <- popSum$Njm
+  Nm <- popSum$Nm
+  Nj <- popSum$Nj
   
   # processing the local proportion of group m in locality j
   if(nrow(pop_intensity) == 0){
@@ -38,12 +32,14 @@ localDissimilarity <- function(pop, pop_intensity){
     lj <- Nj %>% 
       dplyr::rename(lj = Nj)
   } else{
-    ljm <- pop_intensity %>% 
-      tidyr::gather('group', 'ljm', -.data$id)
+    pi_names <- names(pop_intensity)
+    ljm <- data.table::melt(pop_intensity,
+                            id.vars = pi_names[1],
+                            measure.vars = pi_names[-1],
+                            variable.name = 'group',
+                            value.name = 'ljm')
     
-    lj <- ljm %>% 
-      dplyr::group_by(.data$id) %>% 
-      dplyr::summarise(lj = sum(.data$ljm, na.rm=T))
+    lj <- ljm[,.(lj = sum(.data$ljm, na.rm=T)), by = id]
   }
   
   tjm <- ljm %>% 
