@@ -5,22 +5,52 @@
 #' @return A list with the two data frames processed with common ids and with the same order.
 #' #' @author Beatriz Moura dos Santos
 
-idProcess1 <- function(df1, df2){
-  
-  df1 <- data.table::data.table(df1)
-  df2 <- data.table::data.table(df2)
-  
-  nm_df1 <- names(df1)
-  names(df1) <- c('id', nm_df1[-1])
-  nm_df2 <- names(df2)
-  names(df2) <- c('id', nm_df2[-1])
-  
+idProcess <- function(df1, df2){
   ids <- intersect(df1$id, df2$id)
   
-  df1 <- data.table::setorder(df1, id)[id %in% ids]
-  df2 <- data.table::setorder(df2, id)[id %in% ids]
+  df1 <- df1 %>%
+    dplyr::filter(.data$id %in% ids) %>%
+    dplyr::arrange(match(.data$id, ids)) 
+  
+  df2 <- df2 %>%
+    dplyr::filter(.data$id %in% ids) %>%
+    dplyr::arrange(match(.data$id, ids)) 
   
   list(df1, df2)
+}
+
+#' Processes the population information 
+#' 
+#' @param pop A data frame with id and column for each group with population as value
+#' @import dplyr
+#' @return A list with 
+#' \describe{
+#' \item{Njm}{A data frame with total of population of group m in locality j}
+#' \item{Nj}{A data frame with total population in locality j}
+#' \item{Nm}{A numeric value of total population of group m}
+#' \item{N}{A numeric value of total population}
+#' }
+
+popSummary <- function(pop){
+  # processing population
+  Njm <- pop %>% 
+    tidyr::pivot_longer(cols = -.data$id, names_to = 'group', values_to = 'Njm')
+  
+  Nj <- Njm %>% 
+    dplyr::group_by(.data$id) %>% 
+    dplyr::summarise(Nj = sum(.data$Njm, na.rm=T))
+  
+  Nm <- Njm %>% 
+    dplyr::group_by(.data$group) %>% 
+    dplyr::summarise(Nm = sum(.data$Njm, na.rm=T))
+  
+  N <- Njm %>% 
+    dplyr::summarise(N = sum(.data$Njm, na.rm=T))
+  
+  list(Njm = Njm,
+       Nj = Nj,
+       Nm = Nm,
+       N = N)
 }
 
 #' Computes the weights for neighborhood.
@@ -35,36 +65,23 @@ idProcess1 <- function(df1, df2){
 #'    \emph{Geospatial Analysis. A Comprehensive Guide to PrinciplesTechniques and Software Tools}. 
 #'    \url{https://www.spatialanalysisonline.com/HTML/index.html}
 
-getWeight1 <- function(matrix, bandwidth, weightmethod = 'gaussian'){
-
+getWeight <- function(matrix, bandwidth, weightmethod = 'gaussian'){
+  
   if(weightmethod=='gaussian'){
-    matrix[
-      , rate := travel_time/bandwidth
-      ][
-        ,weight := exp(-0.5 * rate^2)
-        ][
-          ,.(origin, destination, weight)
-          ]
+    matrix <- matrix %>%
+      dplyr::mutate(rate = .data$travel_time/bandwidth,
+                    weight = exp(-0.5 * .data$rate^2)) %>%
+      dplyr::select(-.data$travel_time, -.data$rate)
   } else if(weightmethod=='bi-squared'){
-    matrix[
-      , rate := travel_time/bandwidth
-      ][
-        ,weight := (1 - rate^2)^2
-        ][
-          rate > 1, weight := 0
-          ][
-            ,.(origin, destination, weight)
-            ]
+    matrix <- matrix %>%
+      dplyr::mutate(rate = .data$travel_time/bandwidth,
+                    weight = ifelse(.data$rate <= 1, (1 - .data$rate^2)^2, 0)) %>%
+      dplyr::select(-.data$travel_time, -.data$rate)
   } else if(weightmethod=='moving window'){
-    matrix[
-      , rate := travel_time/bandwidth
-      ][
-        ,weight :=  1
-        ][
-          rate > 1, weight := 0
-          ][
-            ,.(origin, destination, weight)
-            ]
+    matrix <- matrix %>%
+      dplyr::mutate(rate = .data$travel_time/bandwidth,
+                    weight = ifelse(.data$rate <= 1, 1, 0))%>%
+      dplyr::select(-.data$travel_time, -.data$rate)
   } else{
     stop('Invalid weight method selected!')
   }
@@ -76,7 +93,7 @@ getWeight1 <- function(matrix, bandwidth, weightmethod = 'gaussian'){
 #'
 #' @param matrix A data frame with the weight processed in \code{link{getWeight}}. 
 #'    It must be structured as origin, destination and weight.
-#' @param pop A data frame structured as id, group and number of population.
+#' @param pop A data frame structured as id, group and number of population. 
 #' @return A data frame with local intensity for each group.
 #' @import dplyr
 #' @author Beatriz Moura dos Santos
@@ -85,11 +102,14 @@ getWeight1 <- function(matrix, bandwidth, weightmethod = 'gaussian'){
 #'    \emph{International Journal of Geographical Information Science}, 21(3), 299-323.
 #' @references Sousa (2017). Segregation Metrics \url{https://github.com/sandrofsousa/Resolution/blob/master/Pysegreg/segregationMetrics.py}
 
-localIntensity1 <- function(matrix, pop){
-  df <- data.table::merge(matrix, pop, by.x = 'destination', by.y = 'id')
-  df[,int := weight * population]
-  
-  df[,.(local_int := sum(int, na.rm = T)),by=group]
+localIntensity <- function(matrix, pop){
+  matrix %>%
+    dplyr::right_join(pop, by=c('destination'='id')) %>%
+    dplyr::select(-.data$destination) %>%
+    dplyr::mutate(int = .data$weight * .data$population) %>%
+    dplyr::group_by(.data$group) %>%
+    dplyr::summarise(local_int = sum(.data$int, na.rm=T)) %>%
+    dplyr::ungroup()
 }
 
 #' Computes the local population intensity for all groups based on a time/distance matrix.
@@ -105,7 +125,7 @@ localIntensity1 <- function(matrix, pop){
 #'    \emph{Geospatial Analysis. A Comprehensive Guide to PrinciplesTechniques and Software Tools}. 
 #'    \url{https://www.spatialanalysisonline.com/HTML/index.html}
 
-popIntensity1 <- function(matrix, pop,
+popIntensity <- function(matrix, pop,
                          bandwidth=60,
                          weightmethod='gaussian'){
   
@@ -114,61 +134,35 @@ popIntensity1 <- function(matrix, pop,
   # getting attributes values
   ids <- intersect(pop$id, unique(matrix$origin))
   n_local <- length(ids)
+  pop$id <- as.character(pop$id)
   
-  message('Filtering origin and population IDs')
+  message('Filtering origin IDs')
   # selecting the same population and matrix localities
-  matrix <- data.table::as.data.table(matrix)
-  matrix <- matrix[origin %in% ids & destination %in% ids]
-  
-  pop <- data.table::as.data.table(pop)
-  pop <- pop[id %in% ids]
-  pop_names <- names(pop)
-  pop <- data.table::melt(pop,
-                          id.vars = pop_names[1],
-                          measure.vars = pop_names[-1],
-                          variable.name = 'group',
-                          value.name = 'population')
+  matrix <- matrix %>% 
+    dplyr::mutate(origin = as.character(.data$origin),
+                  destination = as.character(.data$destination)) %>% 
+    dplyr::filter(.data$origin %in% ids)
   
   message('Processing weights')
-  matrix <- getWeight1(matrix, bandwidth, weightmethod)
+  matrix <- getWeight(matrix, bandwidth, weightmethod)
+  
+  pop <- pop %>% 
+    dplyr::filter(.data$id %in% ids) %>% 
+    tidyr::pivot_longer(-.data$id, names_to = 'group', values_to = 'population')
   
   message('Processing local intensity')
-  locality_temp <- matrix[,localIntensity1(.SD,pop), by = origin]
-  locality_temp <- locality_temp[,.(id := origin, group, local_int)]
+  locality_temp <- matrix %>%
+    dplyr::group_by(.data$origin) %>%
+    dplyr::group_modify(~ localIntensity(.,pop)) %>%
+    dplyr::ungroup()
+  
+  locality_temp[is.na(locality_temp$local_int), 'local_int'] <- 0
+  locality_temp[is.nan(locality_temp$local_int), 'local_int'] <- 0
+  locality_temp[locality_temp$local_int < 0, 'local_int'] <- 0
+  
+  locality_temp <- locality_temp %>%
+    tidyr::spread(.data$group, .data$local_int)
+  names(locality_temp) <- c('id', names(locality_temp)[-1])
   
   return(locality_temp)
-}
-
-#' Processes the population values.
-#' 
-#' @param pop A data table structured as id and columns with number of population for each group.
-#' @return A list with the following items
-#' \describe{
-#'     \item{Njm}{A data table with id, group and population values by locality.}
-#'     \item{Nj}{A data table with id and population values by locality.}
-#'     \item{Nm}{A data table with group and population totals.}
-#'     \item{N}{A data table with population total.}
-#' }
-#' @author Beatriz Moura dos Santos
-#' 
-
-popSummary1 <- function(pop){
-  pop_names <- names(pop)
-  pop <- data.table::data.table(pop)
-  Njm <- data.table::melt(pop,
-                          id.vars = pop_names[1],
-                          measure.vars = pop_names[-1],
-                          variable.name = 'group',
-                          value.name = 'Njm') 
-  
-  Nj <- Njm[,.(Nj=sum(Njm, na.rm=T)), by = id] 
-  
-  Nm <- Njm[,.(Nm=sum(Njm, na.rm=T)), by = group] 
-  
-  N <- Njm[,.(N=sum(Njm, na.rm=T))]$N
-  
-  list(Njm = Njm,
-       Nj = Nj,
-       Nm = Nm,
-       N = N)
 }

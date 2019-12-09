@@ -33,13 +33,11 @@ localDissimilarity <- function(pop, pop_intensity){
       dplyr::rename(lj = Nj)
   } else{
     pi_names <- names(pop_intensity)
-    ljm <- data.table::melt(pop_intensity,
-                            id.vars = pi_names[1],
-                            measure.vars = pi_names[-1],
-                            variable.name = 'group',
-                            value.name = 'ljm')
+    ljm <- tidyr::pivot_longer(pop_intensity, -.data$id, names_to = 'group', values_to = 'ljm')
     
-    lj <- ljm[,.(lj = sum(.data$ljm, na.rm=T)), by = id]
+    lj <- ljm %>% 
+      dplyr::group_by(.data$id) %>% 
+      dplyr::summarise(lj = sum(.data$ljm, na.rm=T))
   }
   
   tjm <- ljm %>% 
