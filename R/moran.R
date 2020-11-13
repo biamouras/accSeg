@@ -313,37 +313,14 @@ localMoran <- function(shp=NULL, x=NULL, y = NULL, W=NULL){
 #' 
 #' @return local_sim (local Moran's I simulations)
 #'         
-localMoranSim <- function(shp=NULL, x=NULL, y = NULL, W=NULL, nsims = 999){
+localMoranSim <- function(x=NULL, y = NULL, W=NULL, nsims = 999){
   
-  # if shp is NULL then it must have x and W
-  if(is.null(shp)){
     # if x is NULL then stop
-    if(is.null(x)) stop('shp and x are NULL. Please add any of these parameters')
+    if(is.null(x)) stop('x is NULL. Please add this parameter')
     # if W is NULL then stop
-    if(is.null(W)) stop('shp and W are NULL. Please add any of these parameters')
+    if(is.null(W)) stop('W is NULL. Please add this parameter')
     # if y is NULL the process is not bivariate
     if(is.null(y)) y <- x
-  } else{
-    # if class of shp is sf
-    if(class(shp)[1] == "sf") {
-      shp_sf <- shp
-      shp <- sf::as_Spatial(shp)
-    } else{
-      shp_sf <- sf::st_as_sf(shp)
-    }
-    message('Processing W matrix')
-    # process the W
-    W <- nbMatrix(shp)
-    # x
-    nm <- names(shp_sf)
-    x <- shp_sf[[nm[2]]]
-    if(ncol(shp) == 2){
-      y <- x
-    } else if(ncol(shp) == 3){
-      y <- shp_sf[[nm[3]]]
-    } else {stop('shp is bigger or shorter than expected')}
-  }
-  
   
   # treating the main and auxiliary variables
   n <- length(y)
