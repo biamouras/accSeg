@@ -128,7 +128,7 @@ globalMoranSim <- function(shp, x=NULL, y = NULL, W=NULL, nsims = 999){
 #' @inheritParams globalMoran
 #' @return lagged values to plot the Moran scatter plot
 
-laggedMoran <- function(x, y = NULL, W=NULL, shp=NULL){
+laggedMoran <- function(shp, x=NULL, y = NULL, W=NULL){
   
   # if shp is NULL then it must have x and W
   if(is.null(shp)){
@@ -157,10 +157,10 @@ laggedMoran <- function(x, y = NULL, W=NULL, shp=NULL){
       y <- shp_sf[[nm[3]]]
     } else {stop('shp is bigger or shorter than expected')}
   }
-  
+  message('scaling variables')
   # scaling variables
   yp <- as.numeric(scale.default(y))
-  
+  message('standardizing matrix')
   # standardizing the matrix, which line sum equals to 1
   Wl <- spdep::mat2listw(W)
   
@@ -270,9 +270,9 @@ LISAmaps <- function(shp=NULL, x=NULL, y=NULL, W=NULL, local_sims=NULL, local_mo
 localMoran <- function(x=NULL, y = NULL, W=NULL){
   
   # if x is NULL then stop
-  if(is.null(x)) stop('shp and x are NULL. Please add any of these parameters')
+  if(is.null(x)) stop('x is NULL. Please add this parameter')
   # if W is NULL then stop
-  if(is.null(W)) stop('shp and W are NULL. Please add any of these parameters')
+  if(is.null(W)) stop('W is NULL. Please add this parameter')
   # if y is NULL the process is not bivariate
   if(is.null(y)) y <- x
 
@@ -301,12 +301,12 @@ localMoran <- function(x=NULL, y = NULL, W=NULL){
 #'         
 localMoranSim <- function(x=NULL, y = NULL, W=NULL, nsims = 999){
   
-    # if x is NULL then stop
-    if(is.null(x)) stop('x is NULL. Please add this parameter')
-    # if W is NULL then stop
-    if(is.null(W)) stop('W is NULL. Please add this parameter')
-    # if y is NULL the process is not bivariate
-    if(is.null(y)) y <- x
+  # if x is NULL then stop
+  if(is.null(x)) stop('x is NULL. Please add this parameter')
+  # if W is NULL then stop
+  if(is.null(W)) stop('W is NULL. Please add this parameter')
+  # if y is NULL the process is not bivariate
+  if(is.null(y)) y <- x
   
   # treating the main and auxiliary variables
   n <- length(y)
