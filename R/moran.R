@@ -15,9 +15,7 @@ nbMatrix <- function(shp){
 #' Processes the global Moran's I bivariate
 #'
 #' @param shp shapefile or simple feature to process the neighbourhood. Expected structure: id, x, y(optional)
-#' @param x numeric vector with values of variable 1. Defaults to NULL.
-#' @param y numeric vector with values of variable 2. Defaults to NULL (not bivariate).
-#' @param W numeric matrix of neighbourhood matrix from \code{\link{nbMatrix}}. Defaults to NULL.
+#' @inheritParams localMoran
 #' @return the global value of Moran's I
 
 globalMoran <- function(shp, x=NULL, y=NULL, W=NULL){
@@ -173,10 +171,10 @@ laggedMoran <- function(x, y = NULL, W=NULL, shp=NULL){
 }
 
 #' Processes the local simulations and local Moran to produce 
-#' LISA map. IT STILL CAN'T PROCESS THE BIVARIATE
+#' LISA map.
 #' 
-#' @param local_sims numeric vector with local simulations of Moran (result from \code{\link{localMoranSim}}
-#' @param local_moran numeric vector with local values of Moran's I (result from \code{\link{localMoran}}
+#' @param local_sims numeric vector with local simulations of Moran (result from \code{\link{localMoranSim}})
+#' @param local_moran numeric vector with local values of Moran's I (result from \code{\link{localMoran}})
 #' @inheritParams localMoran
 #' @return sf with localPseudo (p-value of local), pvalue (p-value classified), patterns (cluster LISA map input)
 
@@ -217,11 +215,13 @@ LISAmaps <- function(shp=NULL, x=NULL, y=NULL, W=NULL, local_sims=NULL, local_mo
     local_moran <- localMoran(x=x, y=y, W=W)
   }
   nrow <- nrow(local_sims)
+  # progress bar
+  pb <- progress::progress_bar$new(format = '[:bar] :current/:total (:percent)',
+                                   total=nrow)
   
   # classifying the local p-values
   df_pvalue <- purrr::map_df(1:nrow, function(i) {
-    message(i)
-    
+    pb$tick()
     # avoid lines filled with 0 and Moran outside the interval
     if(sum(local_sims[i,]) == 0 | local_moran[i] > max(local_sims[i,])){
       localPseudo <- 1
@@ -261,7 +261,9 @@ LISAmaps <- function(shp=NULL, x=NULL, y=NULL, W=NULL, local_sims=NULL, local_mo
 
 #' Processes the local Moran's I bivariate
 #'
-#' @inheritParams globalMoran
+#' @param x numeric vector with values of variable 1. Defaults to NULL.
+#' @param y numeric vector with values of variable 2. Defaults to NULL (not bivariate).
+#' @param W numeric matrix of neighbourhood matrix from \code{\link{nbMatrix}}. Defaults to NULL.
 #'
 #' @return the local values of Moran's I
 
@@ -293,8 +295,8 @@ localMoran <- function(x=NULL, y = NULL, W=NULL){
 
 #' Evaluates the p-value of the Moran's I
 #' 
-#' @inheritParams globalMoranSim
-#' 
+#' @inheritParams localMoran
+#' @param nsims numeric value of number of simulations. Defaults to 999.
 #' @return local_sim (local Moran's I simulations)
 #'         
 localMoranSim <- function(x=NULL, y = NULL, W=NULL, nsims = 999){
@@ -313,9 +315,14 @@ localMoranSim <- function(x=NULL, y = NULL, W=NULL, nsims = 999){
   Wn <- W/rowSums(W)
   Wn[which(is.na(Wn))] <- 0
   
+  # progress bar
+  pb <- progress::progress_bar$new(format = '[:bar] :current/:total (:percent)',
+                                   total=nsims)
+  
   # processing
   local_sims  <- matrix(NA, nrow = n, ncol=nsims)
   local_sims <- replicate(nsims, {
+    pb$tick()
     y_s <- sample(y, size = n)
     y_s <- scale.default(y_s)
     apply(y_s, 2, function(s) s*Wn%*%s)
