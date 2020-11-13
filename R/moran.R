@@ -245,7 +245,7 @@ LISAmaps <- function(shp=NULL, x=NULL, y=NULL, W=NULL, local_sims=NULL, local_mo
   
   shp_sf <- dplyr::bind_cols(shp_sf, df_pvalue)
   lagged <- laggedMoran(shp, x, y, W)
-  xp <- scale.default(x_aux)
+  xp <- scale.default(x)
   
   # classifying the LISA patterns (HH / HL / LH / LL)
   patterns <- as.character(interaction(xp > 0, lagged > 0, sep = " - ") ) 
