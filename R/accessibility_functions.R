@@ -78,7 +78,6 @@ potential <- function(oportunities, matrix, type = 'exponential', betas=NULL, cu
 #'     of counts in the catchment area of the first step, FALSE otherwise. Defaults to FALSE.
 #' @return data frame with origin and acc. If \emph{2sfca} type is chosen, adds the threshold column.
 #' @description Process the 2 Step Floating Catchment Area or the Shen (1998) to process an accessibility with competition.
-#' @details 
 #' @author Beatriz Moura dos Santos
 #' @references Shen (1998). Location characteristics of inner-city neighborhoods and employment accessibility of low-wage workers. 
 #'     \emph{Environment and planning B: Planning and Design}, 25(3), 345-365.
