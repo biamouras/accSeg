@@ -218,12 +218,17 @@ LISAmaps <- function(shp=NULL, x=NULL, y=NULL, W=NULL, local_sims=NULL, local_mo
   }
   nrow <- nrow(local_sims)
   
-  #REVER PARA RODAR COM LINHAS IGUAIS A ZERO
   # classifying the local p-values
   df_pvalue <- purrr::map_df(1:nrow, function(i) {
     message(i)
-    p <- stats::ecdf(local_sims[i,])
-    localPseudo <- p(local_moran[i])
+    
+    # avoid lines filled with 0 and Moran outside the interval
+    if(sum(local_sims[i,]) == 0 | local_moran[i] > max(local_sims[i,])){
+      localPseudo <- 1
+    } else {
+      p <- stats::ecdf(local_sims[i,])
+      localPseudo <- p(local_moran[i])
+    }
     
     pvalue <- as.character(factor(cut(
       localPseudo,
@@ -281,9 +286,9 @@ localMoran <- function(x=NULL, y = NULL, W=NULL){
   Wn[which(is.na(Wn))] <- 0
   
   # processing local Moran
-  local  <- (xp*Wn%*%yp)
+  local_moran  <- (xp*Wn%*%yp)
   
-  return(local)
+  return(local_moran)
 }
 
 #' Evaluates the p-value of the Moran's I
