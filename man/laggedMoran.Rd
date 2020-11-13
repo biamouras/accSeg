@@ -4,16 +4,16 @@
 \alias{laggedMoran}
 \title{Processes the lagged value to plot Moran scatter plot}
 \usage{
-laggedMoran(x, y = NULL, W = NULL, shp = NULL)
+laggedMoran(shp, x = NULL, y = NULL, W = NULL)
 }
 \arguments{
+\item{shp}{shapefile or simple feature to process the neighbourhood. Expected structure: id, x, y(optional)}
+
 \item{x}{numeric vector with values of variable 1. Defaults to NULL.}
 
 \item{y}{numeric vector with values of variable 2. Defaults to NULL (not bivariate).}
 
 \item{W}{numeric matrix of neighbourhood matrix from \code{\link{nbMatrix}}. Defaults to NULL.}
-
-\item{shp}{shapefile or simple feature to process the neighbourhood. Expected structure: id, x, y(optional)}
 }
 \value{
 lagged values to plot the Moran scatter plot

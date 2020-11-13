@@ -4,11 +4,9 @@
 \alias{localMoran}
 \title{Processes the local Moran's I bivariate}
 \usage{
-localMoran(shp = NULL, x = NULL, y = NULL, W = NULL)
+localMoran(x = NULL, y = NULL, W = NULL)
 }
 \arguments{
-\item{shp}{shapefile or simple feature to process the neighbourhood. Expected structure: id, x, y(optional)}
-
 \item{x}{numeric vector with values of variable 1. Defaults to NULL.}
 
 \item{y}{numeric vector with values of variable 2. Defaults to NULL (not bivariate).}

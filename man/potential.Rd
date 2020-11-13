@@ -4,8 +4,13 @@
 \alias{potential}
 \title{Processes the potential (or gravity) accessibility.}
 \usage{
-potential(oportunities, matrix, type = "exponential", betas = NULL,
-  cutoff = NULL)
+potential(
+  oportunities,
+  matrix,
+  type = "exponential",
+  betas = NULL,
+  cutoff = NULL
+)
 }
 \arguments{
 \item{oportunities}{data frame with id and oportunity structure.}

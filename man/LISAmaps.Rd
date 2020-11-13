@@ -3,28 +3,32 @@
 \name{LISAmaps}
 \alias{LISAmaps}
 \title{Processes the local simulations and local Moran to produce 
-LISA map. IT STILL CAN'T PROCESS THE BIVARIATE}
+LISA map.}
 \usage{
-LISAmaps(shp = NULL, x = NULL, y = NULL, W = NULL,
-  local_sims = NULL, local_moran = NULL)
+LISAmaps(
+  shp = NULL,
+  x = NULL,
+  y = NULL,
+  W = NULL,
+  local_sims = NULL,
+  local_moran = NULL
+)
 }
 \arguments{
-\item{shp}{shapefile or simple feature to process the neighbourhood. Expected structure: id, x, y(optional)}
-
 \item{x}{numeric vector with values of variable 1. Defaults to NULL.}
 
 \item{y}{numeric vector with values of variable 2. Defaults to NULL (not bivariate).}
 
 \item{W}{numeric matrix of neighbourhood matrix from \code{\link{nbMatrix}}. Defaults to NULL.}
 
-\item{local_sims}{numeric vector with local simulations of Moran (result from \code{\link{localMoranSim}}}
+\item{local_sims}{numeric vector with local simulations of Moran (result from \code{\link{localMoranSim}})}
 
-\item{local_moran}{numeric vector with local values of Moran's I (result from \code{\link{localMoran}}}
+\item{local_moran}{numeric vector with local values of Moran's I (result from \code{\link{localMoran}})}
 }
 \value{
 sf with localPseudo (p-value of local), pvalue (p-value classified), patterns (cluster LISA map input)
 }
 \description{
 Processes the local simulations and local Moran to produce 
-LISA map. IT STILL CAN'T PROCESS THE BIVARIATE
+LISA map.
 }

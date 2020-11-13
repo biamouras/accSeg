@@ -4,12 +4,9 @@
 \alias{localMoranSim}
 \title{Evaluates the p-value of the Moran's I}
 \usage{
-localMoranSim(shp = NULL, x = NULL, y = NULL, W = NULL,
-  nsims = 999)
+localMoranSim(x = NULL, y = NULL, W = NULL, nsims = 999)
 }
 \arguments{
-\item{shp}{shapefile or simple feature to process the neighbourhood. Expected structure: id, x, y(optional)}
-
 \item{x}{numeric vector with values of variable 1. Defaults to NULL.}
 
 \item{y}{numeric vector with values of variable 2. Defaults to NULL (not bivariate).}

@@ -4,8 +4,14 @@
 \alias{twosfca}
 \title{Processes the competition accessibility.}
 \usage{
-twosfca(oportunities, matrix, type = "2sfca", betas = NULL,
-  cutoff = NULL, prestep = FALSE)
+twosfca(
+  oportunities,
+  matrix,
+  type = "2sfca",
+  betas = NULL,
+  cutoff = NULL,
+  prestep = FALSE
+)
 }
 \arguments{
 \item{oportunities}{data frame with id, oportunity and population structure.}
